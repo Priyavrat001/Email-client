@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Client</title>
+    <link rel="stylesheet" href="styles/index.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <ul class="filter-bar">
+                <li class="filter-button active unread">Unread</li>
+                <li class="filter-button read">Read</li>
+                <li class="filter-button favourite">Favorites</li>
+            </ul>
+        </nav>
+    </header>
+    <main class="container">
+        <div class="email-list">
+            <div class="email-items"></div>
+            <div class="pagination-controls">
+                <button class="prev-button">Previous</button>
+                <span class="page-info"></span>
+                <button class="next-button">Next</button>
+            </div>
+        </div>
+        <div class="email-detail-panel">
+            <div class="email-header">
+                <div class="email-avatar-large">F</div>
+                <div class="email-info">
+                    <p class="email-subject-large">Email Subject</p>
+                    <p class="email-date-large">Date and Time</p>
+                </div>
+                <button class="favorite-button">Mark as Favorite</button>
+            </div>
+            <p class="email-body-large">
+                Email body content goes here...
+            </p>
+        </div>
+    </main>
+    <script src="js/index.js"></script>
+</body>
+</html>
