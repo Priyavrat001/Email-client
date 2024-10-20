@@ -14,7 +14,6 @@ header nav ul li {
     display: flex; /* Flexbox for layout */
     max-width: 90vw;
     margin: 0 auto;
-    padding: 20px;
     gap: 20px; /* Space between email list and detail panel */
     max-height: 80vh; /* Set a fixed height for the container */
 }
@@ -176,3 +175,8 @@ header nav ul li {
 }
 
 
+@media (max-width: 905px) {
+    .container{
+        flex-direction: column;
+    }
+}
