@@ -22,11 +22,11 @@ header nav ul li {
 .filter-bar {
     display: flex;
     justify-content: flex-start;
-    /* margin-bottom: 20px; */
+    align-items: center;
+    gap: 17px;
 }
 
 .filter-button {
-    background-color: #E1E4EA;
     border: none;
     padding: 10px 20px;
     margin-right: 10px;
@@ -35,9 +35,23 @@ header nav ul li {
     font-size: 14px;
 }
 
+.filter-button:hover{
+    background-color: #E1E4EA;
+    border-radius: 24px;
+}
+
 .filter-button.active {
-    background-color: #E54065;
-    color: white;
+    background-color: #E1E4EA;
+    color: black;
+    border-radius: 24px;
+}
+
+.unread-email {
+    background-color: #f5f5f5; /* Light gray background */
+    border-left: 4px solid #007bff; /* Optional: Highlight with a blue border */
+    padding: 10px;
+    margin-bottom: 5px;
+    border-radius: 4px;
 }
 
 /* Email List */

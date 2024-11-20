@@ -12,43 +12,69 @@ document.addEventListener("DOMContentLoaded", function () {
     const pageInfo = document.querySelector(".page-info");
 
     let currentlySelectedEmail = null;
-    let emailsData = []; // To store the fetched email data
-    let unreadEmails = []; // Unread emails
-    let readEmails = []; // Read emails
-    let favoriteEmails = []; // Favorite emails
+    let emailsData = [];
+    let unreadEmails = [];
+    let readEmails = [];
+    let favoriteEmails = [];
     let currentPage = 1;
-    const itemsPerPage = 5;
 
-    // Fetch the email data from the API
-    fetch('https://flipkart-email-mock.now.sh/')
-        .then(response => response.json())
-        .then(data => {
-            emailsData = data.list; // Store the fetched email data
-            unreadEmails = emailsData.filter(email => !email.read);
-            renderEmails(unreadEmails, currentPage);
-            updatePaginationControls(unreadEmails);
-        })
-        .catch(error => console.error('Error fetching email data:', error));
-
-    // Function to render emails based on the filter and current page
-    function renderEmails(emails, page) {
-        emailList.innerHTML = ''; // Clear existing emails
-        const start = (page - 1) * itemsPerPage;
-        const end = start + itemsPerPage;
-        const paginatedEmails = emails.slice(start, end);
-
-        paginatedEmails.forEach(email => {
-            const emailItem = createEmailItem(email);
-            emailList.appendChild(emailItem);
-        });
+    // Fetch email data for the current page
+    function fetchEmails(page) {
+        const url = `https://flipkart-email-mock.vercel.app/?page=${page}`;
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                emailsData = data.list; // Load emails from the current page
+                unreadEmails = emailsData.filter(email => !email.read);
+                renderEmails(unreadEmails);
+                updatePaginationControls();
+            })
+            .catch(error => console.error('Error fetching email data:', error));
     }
 
-    // Function to create an email item element
+   // Function to render emails
+function renderEmails(emails) {
+    emailList.innerHTML = ''; // Clear existing emails
+
+    if (emails.length === 0) {
+        // Show a message if no emails match the filter
+        const noEmailsMessage = document.createElement('p');
+        noEmailsMessage.classList.add('no-emails-message');
+        const activeFilter = document.querySelector(".filter-button.active");
+
+        if (activeFilter.classList.contains("read")) {
+            noEmailsMessage.textContent = "There are no read emails.";
+        } else if (activeFilter.classList.contains("favourite")) {
+            noEmailsMessage.textContent = "You don't have any favorite emails.";
+        } else if (activeFilter.classList.contains("unread")) {
+            noEmailsMessage.textContent = "There are no unread emails.";
+        } else {
+            noEmailsMessage.textContent = "No emails to display.";
+        }
+
+        emailList.appendChild(noEmailsMessage);
+        return; // Exit the function since there's nothing to render
+    }
+
+    // Render email items if emails are available
+    emails.forEach(email => {
+        const emailItem = createEmailItem(email);
+        emailList.appendChild(emailItem);
+    });
+}
+
+
+    // Function to create a single email item
     function createEmailItem(email) {
         const emailItem = document.createElement('div');
         emailItem.classList.add('email-item');
         emailItem.dataset.id = email.id;
-
+    
+        // Apply the unread-email class if the email is unread
+        if (!email.read) {
+            emailItem.classList.add('unread-email');
+        }
+    
         emailItem.innerHTML = `
             <div class="email-avatar">${email.from.name[0]}</div>
             <div class="email-details">
@@ -59,48 +85,57 @@ document.addEventListener("DOMContentLoaded", function () {
                 ${email.favorite ? '<span class="email-favorite">Favorite</span>' : ''}
             </div>
         `;
-
+    
         emailItem.addEventListener('click', function () {
             if (currentlySelectedEmail === emailItem) {
                 emailDetailPanel.classList.remove('visible');
                 currentlySelectedEmail = null;
             } else {
                 email.read = true; // Mark email as read
+                emailItem.classList.remove('unread-email'); // Remove unread styling
                 updateEmailSections(email); // Update email sections
-
+    
                 emailDetailPanel.classList.add('visible');
                 emailSubjectLarge.textContent = email.subject;
                 emailDateLarge.textContent = new Date(email.date).toLocaleString();
                 emailBodyLarge.textContent = email.short_description;
                 emailAvatarLarge.textContent = email.from.name[0];
-
+    
                 favoriteButton.textContent = email.favorite ? 'Unmark as Favorite' : 'Mark as Favorite';
-
+    
                 favoriteButton.onclick = function (event) {
-                    event.stopPropagation();
+                    event.stopPropagation(); // Prevent event from bubbling to the parent
+                
+                    // Toggle favorite status
                     email.favorite = !email.favorite;
-                    updateEmailSections(email); // Update email sections
-                    renderEmails(getCurrentFilterEmails(), currentPage); // Re-render based on the active filter and current page
+                
+                    // Update favorite button text
+                    favoriteButton.textContent = email.favorite ? 'Unmark as Favorite' : 'Mark as Favorite';
+                
+                    // Remove or re-add the email to the favoriteEmails list
+                    updateEmailSections(email); 
+                
+                    // Re-render the emails based on the active filter and current page
+                    renderEmails(getCurrentFilterEmails(), currentPage);
                 };
-
+                
+    
                 currentlySelectedEmail = emailItem;
             }
         });
-
+    
         return emailItem;
     }
+    
 
-    // Function to update the email sections when an email is read or marked as favorite
+    // Update email categories
     function updateEmailSections(email) {
-        // Remove email from unread if marked as read
         if (email.read) {
             unreadEmails = unreadEmails.filter(e => e.id !== email.id);
             if (!readEmails.find(e => e.id === email.id)) {
                 readEmails.push(email);
             }
         }
-
-        // Add or remove email from favorites
         if (email.favorite) {
             if (!favoriteEmails.find(e => e.id === email.id)) {
                 favoriteEmails.push(email);
@@ -110,7 +145,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // Function to return emails based on the current filter
+    // Get the current filter's emails
     function getCurrentFilterEmails() {
         const activeFilter = document.querySelector(".filter-button.active");
         if (activeFilter.classList.contains("unread")) {
@@ -120,41 +155,36 @@ document.addEventListener("DOMContentLoaded", function () {
         } else if (activeFilter.classList.contains("favourite")) {
             return favoriteEmails;
         }
+        return emailsData; // Default to all emails if no filter is active
     }
 
-    // Event listeners for filter buttons
-    filterButtons.forEach(button => {
-        button.addEventListener("click", function () {
-            filterButtons.forEach(btn => btn.classList.remove("active"));
-            button.classList.add("active");
-            currentPage = 1; // Reset to the first page when filter changes
-            renderEmails(getCurrentFilterEmails(), currentPage);
-            updatePaginationControls(getCurrentFilterEmails());
-        });
-    });
-
-    // Function to update pagination controls based on the filtered emails
-    function updatePaginationControls(emails) {
-        const totalPages = Math.ceil(emails.length / itemsPerPage);
-        pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
-
+    // Update pagination controls
+    function updatePaginationControls() {
+        pageInfo.textContent = `Page ${currentPage}`;
         prevButton.disabled = currentPage === 1;
-        nextButton.disabled = currentPage === totalPages;
 
         prevButton.onclick = function () {
             if (currentPage > 1) {
                 currentPage--;
-                renderEmails(getCurrentFilterEmails(), currentPage);
-                updatePaginationControls(getCurrentFilterEmails());
+                fetchEmails(currentPage);
             }
         };
 
         nextButton.onclick = function () {
-            if (currentPage < totalPages) {
-                currentPage++;
-                renderEmails(getCurrentFilterEmails(), currentPage);
-                updatePaginationControls(getCurrentFilterEmails());
-            }
+            currentPage++;
+            fetchEmails(currentPage);
         };
     }
+
+    // Handle filter button clicks
+    filterButtons.forEach(button => {
+        button.addEventListener("click", function () {
+            filterButtons.forEach(btn => btn.classList.remove("active"));
+            button.classList.add("active");
+            renderEmails(getCurrentFilterEmails());
+        });
+    });
+
+    // Start by fetching the first page
+    fetchEmails(currentPage);
 });
